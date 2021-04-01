@@ -11,7 +11,7 @@ terraform {
 }
 
 locals {
-  workload_identity_config = ! var.enable_workload_identity ? [] : var.identity_namespace == null ? [{
+  workload_identity_config = !var.enable_workload_identity ? [] : var.identity_namespace == null ? [{
     identity_namespace = "${var.project}.svc.id.goog" }] : [{ identity_namespace = var.identity_namespace
   }]
 }
@@ -67,8 +67,9 @@ resource "google_container_cluster" "cluster" {
   # ip_allocation_policy.use_ip_aliases defaults to true, since we define the block `ip_allocation_policy`
   ip_allocation_policy {
     // Choose the range, but let GCP pick the IPs within the range
-    cluster_secondary_range_name  = var.cluster_secondary_range_name
-    services_secondary_range_name = var.services_secondary_range_name != null ? var.services_secondary_range_name : var.cluster_secondary_range_name
+    cluster_secondary_range_name = var.cluster_secondary_range_name
+    # BRUDI WORKAROUND FOR https://github.com/gruntwork-io/terraform-google-gke/issues/118
+    #services_secondary_range_name = var.services_secondary_range_name != null ? var.services_secondary_range_name : var.cluster_secondary_range_name
   }
 
   # We can optionally control access to the cluster
@@ -81,15 +82,15 @@ resource "google_container_cluster" "cluster" {
 
   addons_config {
     http_load_balancing {
-      disabled = ! var.http_load_balancing
+      disabled = !var.http_load_balancing
     }
 
     horizontal_pod_autoscaling {
-      disabled = ! var.horizontal_pod_autoscaling
+      disabled = !var.horizontal_pod_autoscaling
     }
 
     network_policy_config {
-      disabled = ! var.enable_network_policy
+      disabled = !var.enable_network_policy
     }
   }
 
